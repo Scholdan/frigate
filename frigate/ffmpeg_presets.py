@@ -276,8 +276,15 @@ def parse_preset_hardware_acceleration_scale(
     fps: int,
     width: int,
     height: int,
+    gpu: int = 0,
+    hwaccel_device: str | None = None,
 ) -> list[str]:
     """Return the correct scaling preset or default preset if none is set."""
+    if isinstance(arg, str) and arg in {"preset-intel-qsv-h264", "preset-intel-qsv-h265"}:
+        gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu, hwaccel_device)
+        if gpu_arg and _gpu_selector.is_xe_driver(gpu_arg):
+            arg = FFMPEG_HWACCEL_VAAPI
+
     if not isinstance(arg, str) or " " in arg:
         scale = PRESETS_HW_ACCEL_SCALE["default"]
     else:

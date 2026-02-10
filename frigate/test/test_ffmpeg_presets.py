@@ -7,6 +7,7 @@ from frigate.config.camera.ffmpeg import FFMPEG_INPUT_ARGS_DEFAULT
 from frigate.ffmpeg_presets import (
     _gpu_selector,
     parse_preset_hardware_acceleration_decode,
+    parse_preset_hardware_acceleration_scale,
     parse_preset_input,
 )
 
@@ -206,6 +207,20 @@ class TestFfmpegPresets(unittest.TestCase):
             args_str = " ".join(args)
             assert "-hwaccel vaapi" in args_str
             assert "-hwaccel_device /dev/dri/renderD128" in args_str
+
+    def test_ffmpeg_qsv_scale_falls_back_to_vaapi_for_xe_driver(self):
+        with patch.object(_gpu_selector, "is_xe_driver", return_value=True):
+            args = parse_preset_hardware_acceleration_scale(
+                "preset-intel-qsv-h264",
+                ["-f", "rawvideo", "-pix_fmt", "yuv420p"],
+                5,
+                1920,
+                1080,
+                0,
+                "/dev/dri/renderD128",
+            )
+            args_str = " ".join(args)
+            assert "scale_vaapi" in args_str
 
 
 if __name__ == "__main__":

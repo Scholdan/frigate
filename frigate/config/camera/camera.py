@@ -205,6 +205,8 @@ class CameraConfig(FrigateBaseModel):
                 self.detect.fps,
                 self.detect.width,
                 self.detect.height,
+                self.ffmpeg.gpu,
+                self.ffmpeg.hwaccel_device,
             )
 
             ffmpeg_output_args = scale_detect_args + ffmpeg_output_args + ["pipe:"]
