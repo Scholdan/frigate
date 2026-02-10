@@ -193,6 +193,20 @@ class TestFfmpegPresets(unittest.TestCase):
             assert "/dev/dri/renderD128" in args
         _gpu_selector._valid_gpus = None
 
+    def test_ffmpeg_qsv_falls_back_to_vaapi_for_xe_driver(self):
+        with patch.object(_gpu_selector, "is_xe_driver", return_value=True):
+            args = parse_preset_hardware_acceleration_decode(
+                "preset-intel-qsv-h264",
+                5,
+                1920,
+                1080,
+                0,
+                "/dev/dri/renderD128",
+            )
+            args_str = " ".join(args)
+            assert "-hwaccel vaapi" in args_str
+            assert "-hwaccel_device /dev/dri/renderD128" in args_str
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

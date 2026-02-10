@@ -90,6 +90,17 @@ class LibvaGpuSelector:
             logger.warning(f"Invalid GPU index {gpu}, using first valid GPU")
             return self._valid_gpus[0]
 
+    def is_xe_driver(self, device_path: str) -> bool:
+        device = os.path.basename(device_path)
+        if not device.startswith("renderD"):
+            return False
+
+        driver_link = f"/sys/class/drm/{device}/device/driver"
+        if not os.path.exists(driver_link):
+            return False
+
+        return os.path.basename(os.path.realpath(driver_link)) == "xe"
+
 
 FPS_VFR_PARAM = "-fps_mode vfr" if LIBAVFORMAT_VERSION_MAJOR >= 59 else "-vsync 2"
 TIMEOUT_PARAM = "-timeout" if LIBAVFORMAT_VERSION_MAJOR >= 59 else "-stimeout"
@@ -248,6 +259,14 @@ def parse_preset_hardware_acceleration_decode(
         return None
 
     gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu, hwaccel_device)
+
+    if arg in {"preset-intel-qsv-h264", "preset-intel-qsv-h265"} and gpu_arg:
+        if _gpu_selector.is_xe_driver(gpu_arg):
+            logger.warning(
+                "QSV preset is not supported with xe kernel driver, falling back to VAAPI"
+            )
+            decode = PRESETS_HW_ACCEL_DECODE[FFMPEG_HWACCEL_VAAPI]
+
     return decode.format(fps, width, height, gpu_arg).split(" ")
 
 
