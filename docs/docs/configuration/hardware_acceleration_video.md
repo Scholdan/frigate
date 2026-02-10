@@ -114,6 +114,8 @@ ffmpeg:
   hwaccel_device: /dev/dri/renderD129
 ```
 
+On systems using the Intel `xe` kernel driver, Frigate automatically falls back from QSV presets to VAAPI for decode stability. If you explicitly want to force QSV on `xe` (for testing), set `FRIGATE_XE_ALLOW_QSV=1` in the container environment.
+
 ### Configuring Intel GPU Stats in Docker
 
 Additional configuration is needed for the Docker container to be able to access the `intel_gpu_top` command for GPU stats. There are two options:

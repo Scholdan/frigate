@@ -222,6 +222,22 @@ class TestFfmpegPresets(unittest.TestCase):
             args_str = " ".join(args)
             assert "scale_vaapi" in args_str
 
+    def test_ffmpeg_qsv_xe_fallback_can_be_disabled(self):
+        with patch.object(_gpu_selector, "is_xe_driver", return_value=True), patch.dict(
+            "os.environ", {"FRIGATE_XE_ALLOW_QSV": "1"}, clear=False
+        ):
+            args = parse_preset_hardware_acceleration_decode(
+                "preset-intel-qsv-h264",
+                5,
+                1920,
+                1080,
+                0,
+                "/dev/dri/renderD128",
+            )
+            args_str = " ".join(args)
+            assert "-qsv_device /dev/dri/renderD128" in args_str
+            assert "-hwaccel vaapi" not in args_str
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

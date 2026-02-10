@@ -260,9 +260,10 @@ def parse_preset_hardware_acceleration_decode(
         return None
 
     gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu, hwaccel_device)
+    allow_xe_qsv = os.environ.get("FRIGATE_XE_ALLOW_QSV") == "1"
 
     if arg in {"preset-intel-qsv-h264", "preset-intel-qsv-h265"} and gpu_arg:
-        if _gpu_selector.is_xe_driver(gpu_arg):
+        if _gpu_selector.is_xe_driver(gpu_arg) and not allow_xe_qsv:
             global _qsv_xe_warning_emitted
             if not _qsv_xe_warning_emitted:
                 logger.warning(
@@ -284,9 +285,11 @@ def parse_preset_hardware_acceleration_scale(
     hwaccel_device: str | None = None,
 ) -> list[str]:
     """Return the correct scaling preset or default preset if none is set."""
+    allow_xe_qsv = os.environ.get("FRIGATE_XE_ALLOW_QSV") == "1"
+
     if isinstance(arg, str) and arg in {"preset-intel-qsv-h264", "preset-intel-qsv-h265"}:
         gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu, hwaccel_device)
-        if gpu_arg and _gpu_selector.is_xe_driver(gpu_arg):
+        if gpu_arg and _gpu_selector.is_xe_driver(gpu_arg) and not allow_xe_qsv:
             arg = FFMPEG_HWACCEL_VAAPI
 
     if not isinstance(arg, str) or " " in arg:
