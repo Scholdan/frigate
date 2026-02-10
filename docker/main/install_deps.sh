@@ -96,7 +96,7 @@ if [[ "${TARGETARCH}" == "amd64" ]]; then
     apt-get -qq install --no-install-recommends --no-install-suggests -y \
         intel-media-va-driver-non-free libmfx1 libmfxgen1 libvpl2 \
         intel-opencl-icd intel-level-zero-gpu intel-ocloc \
-        intel-igc-core intel-igc-opencl libigdgmm12
+        libigdgmm12
 
     apt-get -qq install -y ocl-icd-libopencl1
 
