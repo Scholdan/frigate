@@ -106,6 +106,7 @@ FPS_VFR_PARAM = "-fps_mode vfr" if LIBAVFORMAT_VERSION_MAJOR >= 59 else "-vsync 
 TIMEOUT_PARAM = "-timeout" if LIBAVFORMAT_VERSION_MAJOR >= 59 else "-stimeout"
 
 _gpu_selector = LibvaGpuSelector()
+_qsv_xe_warning_emitted = False
 _user_agent_args = [
     "-user_agent",
     f"FFmpeg Frigate/{VERSION}",
@@ -262,9 +263,12 @@ def parse_preset_hardware_acceleration_decode(
 
     if arg in {"preset-intel-qsv-h264", "preset-intel-qsv-h265"} and gpu_arg:
         if _gpu_selector.is_xe_driver(gpu_arg):
-            logger.warning(
-                "QSV preset is not supported with xe kernel driver, falling back to VAAPI"
-            )
+            global _qsv_xe_warning_emitted
+            if not _qsv_xe_warning_emitted:
+                logger.warning(
+                    "QSV preset is not supported with xe kernel driver, falling back to VAAPI"
+                )
+                _qsv_xe_warning_emitted = True
             decode = PRESETS_HW_ACCEL_DECODE[FFMPEG_HWACCEL_VAAPI]
 
     return decode.format(fps, width, height, gpu_arg).split(" ")
