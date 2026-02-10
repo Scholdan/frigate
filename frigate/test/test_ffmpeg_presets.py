@@ -1,8 +1,14 @@
 import unittest
+from types import SimpleNamespace
+from unittest.mock import patch
 
 from frigate.config import FrigateConfig
 from frigate.config.camera.ffmpeg import FFMPEG_INPUT_ARGS_DEFAULT
-from frigate.ffmpeg_presets import parse_preset_input
+from frigate.ffmpeg_presets import (
+    _gpu_selector,
+    parse_preset_hardware_acceleration_decode,
+    parse_preset_input,
+)
 
 
 class TestFfmpegPresets(unittest.TestCase):
@@ -141,6 +147,51 @@ class TestFfmpegPresets(unittest.TestCase):
         assert "-some output" in (
             " ".join(frigate_config.cameras["back"].ffmpeg_cmds[0]["cmd"])
         )
+
+    def test_ffmpeg_hwaccel_device_override(self):
+        self.default_ffmpeg["cameras"]["back"]["ffmpeg"]["hwaccel_args"] = (
+            "preset-intel-qsv-h264"
+        )
+        self.default_ffmpeg["cameras"]["back"]["ffmpeg"]["hwaccel_device"] = (
+            "/dev/dri/renderD129"
+        )
+        frigate_config = FrigateConfig(**self.default_ffmpeg)
+        assert "-qsv_device /dev/dri/renderD129" in (
+            " ".join(frigate_config.cameras["back"].ffmpeg_cmds[0]["cmd"])
+        )
+
+    def test_ffmpeg_hwaccel_gpu_index_out_of_range_uses_first_device(self):
+        _gpu_selector._valid_gpus = ["/dev/dri/renderD128"]
+        try:
+            args = parse_preset_hardware_acceleration_decode(
+                "preset-intel-qsv-h264",
+                5,
+                1920,
+                1080,
+                1,
+            )
+            assert "/dev/dri/renderD128" in args
+        finally:
+            _gpu_selector._valid_gpus = None
+
+    def test_ffmpeg_hwaccel_gpu_devices_are_sorted(self):
+        _gpu_selector._valid_gpus = None
+        with patch("frigate.ffmpeg_presets.os.path.exists", return_value=True), patch(
+            "frigate.ffmpeg_presets.os.listdir",
+            return_value=["renderD129", "renderD128"],
+        ), patch(
+            "frigate.ffmpeg_presets.vainfo_hwaccel",
+            return_value=SimpleNamespace(returncode=0),
+        ):
+            args = parse_preset_hardware_acceleration_decode(
+                "preset-intel-qsv-h264",
+                5,
+                1920,
+                1080,
+                0,
+            )
+            assert "/dev/dri/renderD128" in args
+        _gpu_selector._valid_gpus = None
 
 
 if __name__ == "__main__":

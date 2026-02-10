@@ -106,6 +106,14 @@ ffmpeg:
   gpu: 1
 ```
 
+If ffmpeg should target a specific render node directly, set `ffmpeg.hwaccel_device`.
+
+```yaml
+ffmpeg:
+  hwaccel_args: preset-intel-qsv-h264
+  hwaccel_device: /dev/dri/renderD129
+```
+
 ### Configuring Intel GPU Stats in Docker
 
 Additional configuration is needed for the Docker container to be able to access the `intel_gpu_top` command for GPU stats. There are two options:

@@ -242,6 +242,7 @@ class CameraConfig(FrigateBaseModel):
                 self.detect.width,
                 self.detect.height,
                 self.ffmpeg.gpu,
+                self.ffmpeg.hwaccel_device,
             )
             or ffmpeg_input.hwaccel_args
             or parse_preset_hardware_acceleration_decode(
@@ -250,6 +251,7 @@ class CameraConfig(FrigateBaseModel):
                 self.detect.width,
                 self.detect.height,
                 self.ffmpeg.gpu,
+                self.ffmpeg.hwaccel_device,
             )
             or camera_arg
             or []

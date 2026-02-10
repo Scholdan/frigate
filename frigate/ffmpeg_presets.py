@@ -2,6 +2,7 @@
 
 import logging
 import os
+import re
 from enum import Enum
 from typing import Any
 
@@ -36,6 +37,14 @@ class LibvaGpuSelector:
 
         devices = list(filter(lambda d: d.startswith("render"), os.listdir("/dev/dri")))
 
+        def render_device_key(device: str) -> tuple[int, int | str]:
+            match = re.match(r"^renderD(\d+)$", device)
+            if not match:
+                return (1, device)
+            return (0, int(match.group(1)))
+
+        devices = sorted(devices, key=render_device_key)
+
         if not devices:
             self._valid_gpus = ["/dev/dri/renderD128"]
             return
@@ -53,9 +62,21 @@ class LibvaGpuSelector:
             if check.returncode == 0:
                 self._valid_gpus.append(f"/dev/dri/{device}")
 
-    def get_gpu_arg(self, preset: str, gpu: int) -> str:
+    def get_gpu_arg(
+        self, preset: str, gpu: int, hwaccel_device: str | None = None
+    ) -> str:
         if "nvidia" in preset:
             return str(gpu)
+
+        preset_lower = preset.lower()
+        env_hwaccel_device = os.environ.get("FRIGATE_HWACCEL_DEVICE")
+        env_qsv_device = (
+            os.environ.get("FRIGATE_QSV_DEVICE") if "qsv" in preset_lower else None
+        )
+        override_device = hwaccel_device or env_qsv_device or env_hwaccel_device
+
+        if override_device and ("qsv" in preset_lower or "vaapi" in preset_lower):
+            return override_device
 
         if self._valid_gpus is None:
             self.__get_valid_gpus()
@@ -63,7 +84,7 @@ class LibvaGpuSelector:
         if not self._valid_gpus:
             return ""
 
-        if gpu <= len(self._valid_gpus):
+        if gpu < len(self._valid_gpus):
             return self._valid_gpus[gpu]
         else:
             logger.warning(f"Invalid GPU index {gpu}, using first valid GPU")
@@ -215,6 +236,7 @@ def parse_preset_hardware_acceleration_decode(
     width: int,
     height: int,
     gpu: int,
+    hwaccel_device: str | None = None,
 ) -> list[str]:
     """Return the correct preset if in preset format otherwise return None."""
     if not isinstance(arg, str):
@@ -225,7 +247,7 @@ def parse_preset_hardware_acceleration_decode(
     if not decode:
         return None
 
-    gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu)
+    gpu_arg = _gpu_selector.get_gpu_arg(arg, gpu, hwaccel_device)
     return decode.format(fps, width, height, gpu_arg).split(" ")
 
 

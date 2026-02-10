@@ -272,6 +272,8 @@ ffmpeg:
   apple_compatibility: false
   # Optional: Set the index of the GPU to use for hardware acceleration. (default: shown below)
   gpu: 0
+  # Optional: Explicitly set the hardware acceleration device path. (default: shown below)
+  hwaccel_device: null
 
 # Optional: Detect configuration
 # NOTE: Can be overridden at the camera level

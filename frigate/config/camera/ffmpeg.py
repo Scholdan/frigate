@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Optional, Union
 
 from pydantic import Field, field_validator
 
@@ -68,6 +68,10 @@ class FfmpegConfig(FrigateBaseModel):
         title="Set tag on HEVC (H.265) recording stream to improve compatibility with Apple players.",
     )
     gpu: int = Field(default=0, title="GPU index to use for hardware acceleration.")
+    hwaccel_device: Optional[str] = Field(
+        default=None,
+        title="Explicit hardware acceleration device path (for example /dev/dri/renderD129).",
+    )
 
     @property
     def ffmpeg_path(self) -> str:
