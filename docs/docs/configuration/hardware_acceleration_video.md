@@ -98,6 +98,14 @@ ffmpeg:
   hwaccel_args: preset-intel-qsv-h265
 ```
 
+If multiple Intel GPUs are passed through to the container (for example, integrated graphics plus Intel Arc), select which GPU ffmpeg should use with the `ffmpeg.gpu` setting.
+
+```yaml
+ffmpeg:
+  hwaccel_args: preset-intel-qsv-h264
+  gpu: 1
+```
+
 ### Configuring Intel GPU Stats in Docker
 
 Additional configuration is needed for the Docker container to be able to access the `intel_gpu_top` command for GPU stats. There are two options:

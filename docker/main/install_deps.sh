@@ -102,7 +102,7 @@ if [[ "${TARGETARCH}" == "amd64" ]]; then
     rm -f /usr/share/keyrings/intel-graphics.gpg
     rm -f /etc/apt/sources.list.d/intel-gpu-jammy.list
 
-    # install legacy and standard intel icd and level-zero-gpu
+    # install legacy intel icd and level-zero-gpu
     # see https://github.com/intel/compute-runtime/blob/master/LEGACY_PLATFORMS.md for more info
     # needed core package
     wget https://github.com/intel/compute-runtime/releases/download/24.52.32224.5/libigdgmm12_22.5.5_amd64.deb
@@ -114,11 +114,18 @@ if [[ "${TARGETARCH}" == "amd64" ]]; then
     wget https://github.com/intel/compute-runtime/releases/download/24.35.30872.36/intel-level-zero-gpu-legacy1_1.5.30872.36_amd64.deb
     wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.24/intel-igc-opencl_1.0.17537.24_amd64.deb
     wget https://github.com/intel/intel-graphics-compiler/releases/download/igc-1.0.17537.24/intel-igc-core_1.0.17537.24_amd64.deb
-    # standard packages
-    wget https://github.com/intel/compute-runtime/releases/download/24.52.32224.5/intel-opencl-icd_24.52.32224.5_amd64.deb
-    wget https://github.com/intel/compute-runtime/releases/download/24.52.32224.5/intel-level-zero-gpu_1.6.32224.5_amd64.deb
-    wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.5.6/intel-igc-opencl-2_2.5.6+18417_amd64.deb
-    wget https://github.com/intel/intel-graphics-compiler/releases/download/v2.5.6/intel-igc-core-2_2.5.6+18417_amd64.deb
+    # standard packages (updated for newer Intel Arc / Battlemage GPUs)
+    NEO_TAG="25.44.36015.5"
+    NEO_DEB_VER="25.44.36015.5-0"
+    IGDGMM_DEB_VER="22.8.2"
+    IGC_TAG="v2.22.2"
+    IGC_DEB_VER="2.22.2+20121"
+    wget "https://github.com/intel/compute-runtime/releases/download/${NEO_TAG}/libigdgmm12_${IGDGMM_DEB_VER}_amd64.deb"
+    wget "https://github.com/intel/compute-runtime/releases/download/${NEO_TAG}/intel-ocloc_${NEO_DEB_VER}_amd64.deb"
+    wget "https://github.com/intel/compute-runtime/releases/download/${NEO_TAG}/intel-opencl-icd_${NEO_DEB_VER}_amd64.deb"
+    wget "https://github.com/intel/compute-runtime/releases/download/${NEO_TAG}/libze-intel-gpu1_${NEO_DEB_VER}_amd64.deb"
+    wget "https://github.com/intel/intel-graphics-compiler/releases/download/${IGC_TAG}/intel-igc-opencl-2_${IGC_DEB_VER}_amd64.deb"
+    wget "https://github.com/intel/intel-graphics-compiler/releases/download/${IGC_TAG}/intel-igc-core-2_${IGC_DEB_VER}_amd64.deb"
     # npu packages
     wget https://github.com/oneapi-src/level-zero/releases/download/v1.21.9/level-zero_1.21.9+u22.04_amd64.deb
     wget https://github.com/intel/linux-npu-driver/releases/download/v1.17.0/intel-driver-compiler-npu_1.17.0.20250508-14912879441_ubuntu22.04_amd64.deb
@@ -126,6 +133,7 @@ if [[ "${TARGETARCH}" == "amd64" ]]; then
     wget https://github.com/intel/linux-npu-driver/releases/download/v1.17.0/intel-level-zero-npu_1.17.0.20250508-14912879441_ubuntu22.04_amd64.deb
 
     dpkg -i *.deb
+    apt-get -qq install -f -y
     rm *.deb
 fi
 
